@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pesquisa NPS · Freitas Consultoria</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+
+  :root{
+    --ink:#152430;
+    --ink-soft:#4c5d67;
+    --navy:#152A3A;
+    --navy-2:#1F4258;
+    --paper:#F6F4EF;
+    --paper-2:#FFFFFF;
+    --gold:#B98A2E;
+    --line:#DCD6C9;
+    --detractor:#B4483A;
+    --passive:#C79A3A;
+    --promoter:#3E7A5C;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:32px 16px 80px;
+  }
+  .wrap{width:100%;max-width:560px;}
+
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:10px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:30px;
+    line-height:1.15;
+    color:var(--navy);
+    margin:0 0 8px;
+  }
+  .sub{
+    color:var(--ink-soft);
+    font-size:15px;
+    line-height:1.5;
+    margin:0 0 28px;
+  }
+
+  .card{
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:28px 24px;
+    margin-bottom:16px;
+  }
+
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--navy);
+    margin-bottom:10px;
+  }
+
+  .scale{
+    display:grid;
+    grid-template-columns:repeat(11,1fr);
+    gap:5px;
+    margin-bottom:8px;
+  }
+  .scale button{
+    aspect-ratio:1/1;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    font-weight:500;
+    color:var(--ink);
+    cursor:pointer;
+    transition:transform .12s ease, background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  .scale button:hover{transform:translateY(-2px);}
+  .scale button.selected{
+    background:var(--navy);
+    border-color:var(--navy);
+    color:#fff;
+    transform:translateY(-2px);
+  }
+  .scale-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-bottom:24px;
+  }
+
+  .field{margin-bottom:18px;}
+  input[type=text], textarea{
+    width:100%;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:11px 12px;
+    resize:vertical;
+  }
+  textarea{min-height:88px;}
+  input:focus, textarea:focus, .scale button:focus{
+    outline:2px solid var(--navy-2);
+    outline-offset:1px;
+  }
+
+  .submit{
+    width:100%;
+    background:var(--navy);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:13px 16px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .submit:hover{background:var(--navy-2);}
+  .submit:disabled{background:#B7C0C6;cursor:not-allowed;}
+  .required-note{font-size:12px;color:var(--ink-soft);text-align:center;margin-top:10px;}
+
+  .thanks{
+    text-align:center;
+    padding:40px 20px;
+  }
+  .thanks .mark{
+    font-family:'Fraunces',serif;
+    font-size:44px;
+    color:var(--gold);
+    margin-bottom:4px;
+  }
+  .thanks h2{
+    font-family:'Fraunces',serif;
+    color:var(--navy);
+    margin:8px 0 6px;
+  }
+  .thanks p{color:var(--ink-soft);font-size:14px;}
+
+  .footer-link{text-align:center;margin-top:20px;}
+  .footer-link button{
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-size:12px;
+    text-decoration:underline;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+
+  .admin-gate{display:flex;gap:8px;}
+  .admin-gate input{flex:1;}
+  .admin-gate button{
+    background:var(--navy);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:0 16px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .stat-row{display:flex;gap:12px;margin-bottom:20px;}
+  .stat{
+    flex:1;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 10px;
+    text-align:center;
+  }
+  .stat .num{font-family:'Fraunces',serif;font-size:26px;color:var(--navy);}
+  .stat .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-top:2px;}
+  .nps-big{text-align:center;padding:18px 0 24px;border-bottom:1px solid var(--line);margin-bottom:20px;}
+  .nps-big .score{font-family:'Fraunces',serif;font-size:56px;color:var(--gold);line-height:1;}
+  .nps-big .score-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);margin-top:6px;}
+  .resp-item{border-bottom:1px solid var(--line);padding:12px 0;}
+  .resp-item:last-child{border-bottom:none;}
+  .resp-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:4px;}
+  .badge{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px;color:#fff;}
+  .resp-meta{font-size:12px;color:var(--ink-soft);}
+  .resp-comment{font-size:13px;color:var(--ink);margin-top:4px;}
+  .empty-state{text-align:center;color:var(--ink-soft);font-size:13px;padding:24px 0;}
+  .error-banner{
+    background:#FBEAEA;
+    border:1px solid var(--detractor);
+    color:var(--detractor);
+    font-size:12px;
+    border-radius:8px;
+    padding:10px 12px;
+    margin-top:12px;
+    display:none;
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ============================================================
+   CONFIGURAÇÃO — preencha com os dados do SEU projeto Supabase
+   (Supabase > Project Settings > API)
+   ============================================================ */
+const SUPABASE_URL = "https://eurdsabhgzalcrhqgdgv.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1cmRzYWJoZ3phbGNyaHFnZGd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MzcwMzIsImV4cCI6MjA5OTIxMzAzMn0.reZMNopKIIszCY59tzLxoiDV9T4gQUo8lqDQhUVNaLc";
+const ADMIN_CODE = "Freitas123@NPS"; // troque por uma senha sua
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const app = document.getElementById('app');
+let selectedScore = null;
+let view = 'form'; // form | thanks | gate | admin
+
+function scaleLabel(n){
+  if(n<=6) return {text:'Detrator', color:'var(--detractor)'};
+  if(n<=8) return {text:'Neutro', color:'var(--passive)'};
+  return {text:'Promotor', color:'var(--promoter)'};
+}
+
+function renderForm(){
+  app.innerHTML = `
+    <div class="eyebrow">Freitas Consultoria Contábil e Financeira</div>
+    <h1>Sua opinião guia nosso trabalho</h1>
+    <p class="sub">Leva menos de um minuto. Suas respostas nos ajudam a manter (ou melhorar) o nível de atendimento que você recebe.</p>
+
+    <div class="card">
+      <label>De 0 a 10, qual a chance de você recomendar a Freitas Consultoria para outro empresário?</label>
+      <div class="scale" id="scale">
+        ${Array.from({length:11},(_,i)=>`<button type="button" data-v="${i}">${i}</button>`).join('')}
+      </div>
+      <div class="scale-labels"><span>Pouco provável</span><span>Muito provável</span></div>
+
+      <div class="field">
+        <label for="nome">Seu nome</label>
+        <input type="text" id="nome" placeholder="Nome completo">
+      </div>
+
+      <div class="field">
+        <label for="empresa">Empresa</label>
+        <input type="text" id="empresa" placeholder="Nome da sua empresa">
+      </div>
+
+      <div class="field">
+        <label for="motivo">O que mais pesou nessa nota? <span style="font-weight:400;color:var(--ink-soft);">(opcional)</span></label>
+        <textarea id="motivo" placeholder="Ex.: prazo de entrega, clareza nas orientações, atendimento..."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="dor">Hoje, qual é a maior dor ou dificuldade da sua empresa que a gente poderia te ajudar a resolver? <span style="font-weight:400;color:var(--ink-soft);">(opcional)</span></label>
+        <textarea id="dor" placeholder="Ex.: não sei se estou pagando imposto a mais, falta de tempo para organizar as finanças, dúvidas sobre abrir uma holding..."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="melhorar">Na sua opinião, o que podemos melhorar? <span style="font-weight:400;color:var(--ink-soft);">(opcional)</span></label>
+        <textarea id="melhorar" placeholder="Ex.: mais agilidade nas respostas, explicações mais claras, mais contato proativo..."></textarea>
+      </div>
+
+      <button class="submit" id="submitBtn" disabled>Enviar avaliação</button>
+      <p class="required-note">Preencha nome, empresa e a nota de 0 a 10 para enviar.</p>
+      <div class="error-banner" id="errorBanner"></div>
+    </div>
+
+    <div class="footer-link"><button id="gateLink">acessar resultados (equipe)</button></div>
+  `;
+
+  document.querySelectorAll('#scale button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      selectedScore = parseInt(btn.dataset.v,10);
+      document.querySelectorAll('#scale button').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      updateSubmitState();
+    });
+  });
+
+  document.getElementById('nome').addEventListener('input', updateSubmitState);
+  document.getElementById('empresa').addEventListener('input', updateSubmitState);
+
+  document.getElementById('submitBtn').addEventListener('click', submitResponse);
+  document.getElementById('gateLink').addEventListener('click', ()=>{ view='gate'; render(); });
+}
+
+function updateSubmitState(){
+  const nome = document.getElementById('nome').value.trim();
+  const empresa = document.getElementById('empresa').value.trim();
+  const ok = selectedScore !== null && nome.length > 0 && empresa.length > 0;
+  document.getElementById('submitBtn').disabled = !ok;
+  document.querySelector('.required-note').style.display = ok ? 'none' : 'block';
+}
+
+async function submitResponse(){
+  const nome = document.getElementById('nome').value.trim();
+  const empresa = document.getElementById('empresa').value.trim();
+  if(selectedScore === null || !nome || !empresa) return;
+
+  const btn = document.getElementById('submitBtn');
+  const errBox = document.getElementById('errorBanner');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  errBox.style.display = 'none';
+
+  const entry = {
+    score: selectedScore,
+    nome: nome,
+    empresa: empresa,
+    comentario: document.getElementById('motivo').value.trim() || null,
+    dor: document.getElementById('dor').value.trim() || null,
+    melhorar: document.getElementById('melhorar').value.trim() || null
+  };
+
+  const { error } = await sb.from('respostas_nps').insert(entry);
+
+  if(error){
+    console.error('Supabase error', error);
+    btn.disabled = false;
+    btn.textContent = 'Enviar avaliação';
+    errBox.textContent = 'Não foi possível enviar agora. Tente novamente em instantes.';
+    errBox.style.display = 'block';
+    return;
+  }
+
+  view = 'thanks';
+  render();
+}
+
+function renderThanks(){
+  app.innerHTML = `
+    <div class="card thanks">
+      <div class="mark">✓</div>
+      <h2>Obrigado pela avaliação</h2>
+      <p>Sua resposta foi registrada. A equipe da Freitas Consultoria agradece o retorno.</p>
+    </div>
+  `;
+}
+
+function renderGate(){
+  app.innerHTML = `
+    <div class="eyebrow">Área restrita</div>
+    <h1>Resultados da pesquisa</h1>
+    <p class="sub">Acesso reservado à equipe do escritório.</p>
+    <div class="card">
+      <label for="pass">Código de acesso</label>
+      <div class="admin-gate">
+        <input type="text" id="pass" placeholder="Código">
+        <button id="enterBtn">Entrar</button>
+      </div>
+      <p class="required-note" id="gateError" style="display:none;color:var(--detractor);">Código incorreto.</p>
+    </div>
+    <div class="footer-link"><button id="backLink">voltar ao formulário</button></div>
+  `;
+  document.getElementById('enterBtn').addEventListener('click', ()=>{
+    const val = document.getElementById('pass').value;
+    if(val === ADMIN_CODE){ view='admin'; render(); }
+    else{ document.getElementById('gateError').style.display='block'; }
+  });
+  document.getElementById('pass').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') document.getElementById('enterBtn').click();
+  });
+  document.getElementById('backLink').addEventListener('click', ()=>{ view='form'; render(); });
+}
+
+async function renderAdmin(){
+  app.innerHTML = `
+    <div class="eyebrow">Freitas Consultoria · Equipe</div>
+    <h1>Resultados NPS</h1>
+    <p class="sub">Carregando respostas...</p>
+  `;
+
+  const { data, error } = await sb
+    .from('respostas_nps')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  const entries = (data || []).map(r => ({
+    score: r.score,
+    nome: r.nome,
+    empresa: r.empresa,
+    comment: r.comentario,
+    dor: r.dor,
+    melhorar: r.melhorar,
+    date: r.created_at
+  }));
+
+  if(error) console.error('Fetch error', error);
+
+  const total = entries.length;
+  const promoters = entries.filter(e=>e.score>=9).length;
+  const passives = entries.filter(e=>e.score>=7 && e.score<=8).length;
+  const detractors = entries.filter(e=>e.score<=6).length;
+  const nps = total ? Math.round(((promoters - detractors) / total) * 100) : 0;
+  const comOportunidade = entries.filter(e=>e.dor).length;
+
+  app.innerHTML = `
+    <div class="eyebrow">Freitas Consultoria · Equipe</div>
+    <h1>Resultados NPS</h1>
+    <p class="sub">${total} resposta${total===1?'':'s'} recebida${total===1?'':'s'}.</p>
+
+    <div class="card">
+      <div class="nps-big">
+        <div class="score">${total ? nps : '—'}</div>
+        <div class="score-lbl">NPS geral</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><div class="num" style="color:var(--promoter);">${promoters}</div><div class="lbl">Promotores</div></div>
+        <div class="stat"><div class="num" style="color:var(--passive);">${passives}</div><div class="lbl">Neutros</div></div>
+        <div class="stat"><div class="num" style="color:var(--detractor);">${detractors}</div><div class="lbl">Detratores</div></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat" style="flex:none;width:100%;"><div class="num" style="color:var(--gold);">${comOportunidade}</div><div class="lbl">Oportunidades de ajuda identificadas</div></div>
+      </div>
+
+      ${total===0 ? '<div class="empty-state">Nenhuma resposta ainda. Compartilhe o link com seus clientes.</div>' : entries.map(e=>{
+        const l = scaleLabel(e.score);
+        const d = new Date(e.date);
+        const dateStr = d.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'});
+        return `<div class="resp-item">
+          <div class="resp-top">
+            <span class="badge" style="background:${l.color};">${e.score} · ${l.text}</span>
+            <span class="resp-meta">${dateStr}</span>
+          </div>
+          ${e.nome || e.empresa ? `<div class="resp-meta">${[e.nome, e.empresa].filter(Boolean).join(' · ')}</div>` : ''}
+          ${e.comment ? `<div class="resp-comment">"${e.comment}"</div>` : ''}
+          ${e.dor ? `<div class="resp-comment" style="margin-top:6px;padding:8px 10px;background:var(--paper);border-left:3px solid var(--gold);border-radius:4px;"><strong style="color:var(--gold);">Dor relatada:</strong> ${e.dor}</div>` : ''}
+          ${e.melhorar ? `<div class="resp-comment" style="margin-top:6px;padding:8px 10px;background:var(--paper);border-left:3px solid var(--navy-2);border-radius:4px;"><strong style="color:var(--navy-2);">Sugestão de melhoria:</strong> ${e.melhorar}</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="footer-link"><button id="backLink">voltar ao formulário</button></div>
+  `;
+  document.getElementById('backLink').addEventListener('click', ()=>{ view='form'; render(); });
+}
+
+function render(){
+  if(view==='form') renderForm();
+  else if(view==='thanks') renderThanks();
+  else if(view==='gate') renderGate();
+  else if(view==='admin') renderAdmin();
+}
+
+render();
+</script>
+</body>
+</html>
