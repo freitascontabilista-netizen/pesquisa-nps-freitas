@@ -32,6 +32,15 @@ create policy "Permitir leitura publica"
   to anon
   using (true);
 
+-- Permite que a chave anônima também EXCLUA respostas
+-- (necessário para o botão "Excluir resposta" no painel da equipe;
+--  a proteção de acesso continua sendo a senha no próprio site)
+create policy "Permitir exclusao publica"
+  on respostas_nps
+  for delete
+  to anon
+  using (true);
+
 -- Índice para ordenar por data rapidamente
 create index if not exists idx_respostas_nps_created_at
   on respostas_nps (created_at desc);
